@@ -32,7 +32,7 @@ struct basic_view
             for_types<ComponentsT...>([&](auto typeHolder) {
                 using component_t = typename decltype(typeHolder)::type;
 
-                if(allocators[get_type_id<component_t>()]->size() >= i)
+                if(allocators[get_type_id<component_t>()]->size() <= i)
                 {
                     breakFor = true;
                 }
@@ -40,7 +40,7 @@ struct basic_view
 
             if(breakFor) return;
 
-            func((*(ComponentsT*) ((*allocators[get_type_id<ComponentsT>()])[i]->component_mem))...);
+            func((*(ComponentsT*) ((*allocators[get_type_id<ComponentsT>()]).get(i)->component_mem))...);
         }
     }
 
@@ -112,12 +112,12 @@ int main()
 {
     registry reg;
     entity_t e0 = reg.create();
-    auto& pos = reg.emplace<position>(e0);
-    auto& rot = reg.emplace<rotation>(e0);
+    auto& pos = reg.emplace<position>(e0, 10, 10, 20);
+    auto& rot = reg.emplace<rotation>(e0, 10, 20, 30);
 
     auto v = reg.view<position, rotation>();
     v.each([](const position& p, const rotation& r) {
-        // do smth
+        std::printf("position: %f, %f, %f | rotation: %f, %f, %f\n", p.x, p.y, p.z, r.x, r.y, r.z);
     });
 
     std::cout << "Hello, World!" << std::endl;

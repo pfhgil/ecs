@@ -28,8 +28,16 @@ struct components_allocator
     template<typename ComponentT, typename... Args>
     basic_component_holder<EntityIDT>* allocate(entity_t forEntity, Args&&... args) noexcept
     {
+        auto* holder = new basic_component_holder<EntityIDT>();
+        holder->component_mem = new ComponentT(std::forward<Args>(args)...);
+        holder->entity_id = forEntity;
+        holder->component_type_id = get_type_id<ComponentT>();
+        holder->component_place_id = buffer.size();
+
+        buffer.push_back(holder);
+
         // do allocate logic and push new component to entity
-        return nullptr;
+        return holder;
     }
 
     template<typename ComponentT>
@@ -40,21 +48,20 @@ struct components_allocator
         return nullptr;
     }
 
-    basic_component_holder<EntityIDT>* operator[](size_t idx) noexcept
+    basic_component_holder<EntityIDT>* get(size_t idx) noexcept
     {
         // do your indexing logic
-        return nullptr;
+        return reinterpret_cast<basic_component_holder<EntityIDT>*>(buffer[idx]);
     }
 
     [[nodiscard]] size_t size() const noexcept
     {
-        return allocator_size;
+        return buffer.size();
     }
 
 private:
-    size_t allocator_size = 0;
-
-    void* buffer = nullptr;
+    std::vector<basic_component_holder<EntityIDT>*> buffer;
+    // void* buffer = nullptr;
 };
 
 #endif //ECS_COMPONENTS_ALLOCATOR_H
