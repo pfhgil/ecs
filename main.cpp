@@ -57,7 +57,7 @@ struct basic_registry
     {
         basic_view<EntityIDT, ComponentsT...> view;
         view.allocators = {
-                {get_type_id<ComponentsT>(), allocators[get_type_id<ComponentsT>()] }
+                {get_type_id<ComponentsT>(), &allocators[get_type_id<ComponentsT>()] }
                 ...
         };
 
@@ -72,9 +72,9 @@ struct basic_registry
     template<typename ComponentT, typename... Args>
     ComponentT& emplace(entity_t forEntity, Args&&... args)
     {
-        auto* allocator = allocators[get_type_id<ComponentT>()];
+        auto& allocator = allocators[get_type_id<ComponentT>()];
         basic_component_holder<EntityIDT>* holder =
-                allocator->template allocate<ComponentT, Args...>(forEntity, std::forward<Args>(args)...);
+                allocator.template allocate<ComponentT, Args...>(forEntity, std::forward<Args>(args)...);
         return (*(ComponentT*) holder->component_mem);
     }
 
@@ -86,7 +86,7 @@ struct basic_registry
     }
 
 private:
-    std::unordered_map<std::uint32_t, components_allocator<EntityIDT>*> allocators;
+    std::unordered_map<std::uint32_t, components_allocator<EntityIDT>> allocators;
     std::vector<entity<EntityIDT>> entities;
     entity_t max_entity = 0;
 };
